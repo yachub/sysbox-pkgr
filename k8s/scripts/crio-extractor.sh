@@ -30,8 +30,10 @@ function install_all() {
 function install_cni() {
 	install ${SELINUX} -d -m 755 ${CNIDIR}
 	install ${SELINUX} -D -m 755 -t ${OPT_CNI_BIN_DIR} cni-plugins/*
-	cp contrib/10-crio-bridge.conf contrib/100-crio-bridge.conf
-	install ${SELINUX} -D -m 644 -t ${CNIDIR} contrib/100-crio-bridge.conf
+	if ! is_host_gke; then
+		cp contrib/10-crio-bridge.conf contrib/100-crio-bridge.conf
+		install ${SELINUX} -D -m 644 -t ${CNIDIR} contrib/100-crio-bridge.conf
+	fi
 }
 
 function install_conmon() {
@@ -87,6 +89,10 @@ function install_runc() {
 
 function install_crun() {
 	install ${SELINUX} -D -m 755 -t ${BINDIR} bin/crun
+}
+
+function is_host_gke() {
+	curl -Ls -o /dev/null "http://metadata.google.internal/computeMetadata/v1/instance/image" -H "Metadata-Flavor: Google" && true || false
 }
 
 function uninstall_all() {
